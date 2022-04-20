@@ -16,31 +16,35 @@ resource "aws_api_gateway_rest_api" "vpn_api" {
 Resources
 */
 resource "aws_api_gateway_resource" "resource_status" {
- rest_api_id = aws_api_gateway_rest_api.vpn_api.id
- parent_id   = aws_api_gateway_rest_api.vpn_api.root_resource_id
- path_part   = "status"
+  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
+  parent_id   = aws_api_gateway_rest_api.vpn_api.root_resource_id
+  path_part   = "status"
 }
 
 resource "aws_api_gateway_resource" "resource_start" {
- rest_api_id = aws_api_gateway_rest_api.vpn_api.id
- parent_id   = aws_api_gateway_rest_api.vpn_api.root_resource_id
- path_part   = "start"
+  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
+  parent_id   = aws_api_gateway_rest_api.vpn_api.root_resource_id
+  path_part   = "start"
 }
 
 resource "aws_api_gateway_resource" "resource_stop" {
- rest_api_id = aws_api_gateway_rest_api.vpn_api.id
- parent_id   = aws_api_gateway_rest_api.vpn_api.root_resource_id
- path_part   = "stop"
+  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
+  parent_id   = aws_api_gateway_rest_api.vpn_api.root_resource_id
+  path_part   = "stop"
 }
 
 /*
 Methods
 */
 resource "aws_api_gateway_method" "method_status" {
-  rest_api_id   = aws_api_gateway_rest_api.vpn_api.id
-  resource_id   = aws_api_gateway_resource.resource_status.id
-  http_method   = "GET"
-  authorization = "NONE"
+  rest_api_id          = aws_api_gateway_rest_api.vpn_api.id
+  resource_id          = aws_api_gateway_resource.resource_status.id
+  http_method          = "GET"
+  authorization        = "NONE"
+  request_validator_id = aws_api_gateway_request_validator.validator_status.id
+  request_parameters = {
+    "method.request.header.anti-spider" = true
+  }
 }
 
 resource "aws_api_gateway_method" "method_start" {
@@ -55,6 +59,15 @@ resource "aws_api_gateway_method" "method_stop" {
   resource_id   = aws_api_gateway_resource.resource_stop.id
   http_method   = "GET"
   authorization = "NONE"
+}
+
+/*
+Request Validator
+*/
+resource "aws_api_gateway_request_validator" "validator_status" {
+  name                        = "check-for-anti-spider-header"
+  rest_api_id                 = aws_api_gateway_rest_api.vpn_api.id
+  validate_request_parameters = true
 }
 
 /*
@@ -106,46 +119,46 @@ resource "aws_api_gateway_method_response" "method_response_start_200" {
 Integrations
 */
 resource "aws_api_gateway_integration" "aws_instance_status" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
-  resource_id = aws_api_gateway_resource.resource_status.id
-  http_method = aws_api_gateway_method.method_status.http_method
-  type        = "AWS"
+  rest_api_id             = aws_api_gateway_rest_api.vpn_api.id
+  resource_id             = aws_api_gateway_resource.resource_status.id
+  http_method             = aws_api_gateway_method.method_status.http_method
+  type                    = "AWS"
   integration_http_method = "GET"
-  uri = "arn:aws:apigateway:eu-west-1:ec2:action/DescribeInstances"
-  credentials = "arn:aws:iam::237725146655:role/control-secret-router"
+  uri                     = "arn:aws:apigateway:eu-west-1:ec2:action/DescribeInstances"
+  credentials             = "arn:aws:iam::237725146655:role/control-secret-router"
 
   request_parameters = {
-    "integration.request.querystring.Version" = "'2016-11-15'"
+    "integration.request.querystring.Version"      = "'2016-11-15'"
     "integration.request.querystring.InstanceId.1" = "'i-09050415bdac45809'"
   }
 }
 
 resource "aws_api_gateway_integration" "aws_instance_stop" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
-  resource_id = aws_api_gateway_resource.resource_stop.id
-  http_method = aws_api_gateway_method.method_stop.http_method
-  type        = "AWS"
+  rest_api_id             = aws_api_gateway_rest_api.vpn_api.id
+  resource_id             = aws_api_gateway_resource.resource_stop.id
+  http_method             = aws_api_gateway_method.method_stop.http_method
+  type                    = "AWS"
   integration_http_method = "GET"
-  uri = "arn:aws:apigateway:eu-west-1:ec2:action/StopInstances"
-  credentials = "arn:aws:iam::237725146655:role/control-secret-router"
+  uri                     = "arn:aws:apigateway:eu-west-1:ec2:action/StopInstances"
+  credentials             = "arn:aws:iam::237725146655:role/control-secret-router"
 
   request_parameters = {
-    "integration.request.querystring.Version" = "'2016-11-15'"
+    "integration.request.querystring.Version"      = "'2016-11-15'"
     "integration.request.querystring.InstanceId.1" = "'i-09050415bdac45809'"
   }
 }
 
 resource "aws_api_gateway_integration" "aws_instance_start" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
-  resource_id = aws_api_gateway_resource.resource_start.id
-  http_method = aws_api_gateway_method.method_start.http_method
-  type        = "AWS"
+  rest_api_id             = aws_api_gateway_rest_api.vpn_api.id
+  resource_id             = aws_api_gateway_resource.resource_start.id
+  http_method             = aws_api_gateway_method.method_start.http_method
+  type                    = "AWS"
   integration_http_method = "GET"
-  uri = "arn:aws:apigateway:eu-west-1:ec2:action/StartInstances"
-  credentials = "arn:aws:iam::237725146655:role/control-secret-router"
+  uri                     = "arn:aws:apigateway:eu-west-1:ec2:action/StartInstances"
+  credentials             = "arn:aws:iam::237725146655:role/control-secret-router"
 
   request_parameters = {
-    "integration.request.querystring.Version" = "'2016-11-15'"
+    "integration.request.querystring.Version"      = "'2016-11-15'"
     "integration.request.querystring.InstanceId.1" = "'i-09050415bdac45809'"
   }
 }
@@ -163,7 +176,8 @@ resource "aws_api_gateway_integration_response" "integration_response_200" {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods"     = "'GET,OPTIONS,POST,PUT'",
     "method.response.header.Access-Control-Allow-Origin"      = "'*'",
-    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'",
+    "method.response.header.Content-Type"                       = "' text/plain'"
   }
 }
 
@@ -196,6 +210,23 @@ resource "aws_api_gateway_integration_response" "integration_response_200_start"
 }
 
 /*
+Gateway Reponses
+*/
+resource "aws_api_gateway_gateway_response" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.vpn_api.id
+  status_code   = "400"
+  response_type = "BAD_REQUEST_PARAMETERS"
+
+  response_templates = {
+    "text/html; charset=utf-8" = "These aren't the droids you're looking for"
+  }
+
+  # response_parameters = {
+  #   "gatewayresponse.header.Authorization" = "'Basic'"
+  # }
+}
+
+/*
 Deployment
 */
 resource "aws_api_gateway_deployment" "vpn_api_deployment" {
@@ -224,8 +255,8 @@ resource "aws_api_gateway_deployment" "vpn_api_deployment" {
 }
 
 resource "aws_api_gateway_stage" "stage_prod" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
-  stage_name  = "prod"
+  rest_api_id   = aws_api_gateway_rest_api.vpn_api.id
+  stage_name    = "prod"
   deployment_id = aws_api_gateway_deployment.vpn_api_deployment.id
 }
 
