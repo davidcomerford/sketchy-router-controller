@@ -41,9 +41,9 @@ resource "aws_api_gateway_method" "method_status" {
   resource_id          = aws_api_gateway_resource.resource_status.id
   http_method          = "GET"
   authorization        = "NONE"
-  request_validator_id = aws_api_gateway_request_validator.validator_status.id
+  request_validator_id = aws_api_gateway_request_validator.validator_antispider.id
   request_parameters = {
-    "method.request.header.anti-spider" = true
+    "method.request.querystring.anti-spider" = true
   }
 }
 
@@ -52,6 +52,10 @@ resource "aws_api_gateway_method" "method_start" {
   resource_id   = aws_api_gateway_resource.resource_start.id
   http_method   = "GET"
   authorization = "NONE"
+  request_validator_id = aws_api_gateway_request_validator.validator_antispider.id
+  request_parameters = {
+    "method.request.querystring.anti-spider" = true
+  }
 }
 
 resource "aws_api_gateway_method" "method_stop" {
@@ -59,12 +63,16 @@ resource "aws_api_gateway_method" "method_stop" {
   resource_id   = aws_api_gateway_resource.resource_stop.id
   http_method   = "GET"
   authorization = "NONE"
+  request_validator_id = aws_api_gateway_request_validator.validator_antispider.id
+  request_parameters = {
+    "method.request.querystring.anti-spider" = true
+  }
 }
 
 /*
 Request Validator
 */
-resource "aws_api_gateway_request_validator" "validator_status" {
+resource "aws_api_gateway_request_validator" "validator_antispider" {
   name                        = "check-for-anti-spider-header"
   rest_api_id                 = aws_api_gateway_rest_api.vpn_api.id
   validate_request_parameters = true
@@ -245,7 +253,7 @@ resource "aws_api_gateway_deployment" "vpn_api_deployment" {
       aws_api_gateway_method.method_status.id,
       aws_api_gateway_method.method_stop.id,
       aws_api_gateway_method.method_start.id,
-      aws_api_gateway_request_validator.validator_status.id,
+      aws_api_gateway_request_validator.validator_antispider.id,
       aws_api_gateway_integration.aws_instance_status.id,
       aws_api_gateway_integration.aws_instance_stop.id,
       aws_api_gateway_integration.aws_instance_start.id,
