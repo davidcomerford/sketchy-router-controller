@@ -85,6 +85,10 @@ resource "aws_api_gateway_method_response" "method_response_status_200" {
     "method.response.header.Access-Control-Allow-Origin"      = true,
     "method.response.header.Access-Control-Allow-Credentials" = true
   }
+
+  # response_models = {
+  #   "text/plain" = "Empty"
+  # }
 }
 
 resource "aws_api_gateway_method_response" "method_response_stop_200" {
@@ -177,7 +181,6 @@ resource "aws_api_gateway_integration_response" "integration_response_200" {
     "method.response.header.Access-Control-Allow-Methods"     = "'GET,OPTIONS,POST,PUT'",
     "method.response.header.Access-Control-Allow-Origin"      = "'*'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'",
-    "method.response.header.Content-Type"                       = "' text/plain'"
   }
 }
 
@@ -212,7 +215,7 @@ resource "aws_api_gateway_integration_response" "integration_response_200_start"
 /*
 Gateway Reponses
 */
-resource "aws_api_gateway_gateway_response" "test" {
+resource "aws_api_gateway_gateway_response" "anti-spider-response" {
   rest_api_id   = aws_api_gateway_rest_api.vpn_api.id
   status_code   = "400"
   response_type = "BAD_REQUEST_PARAMETERS"
@@ -220,15 +223,17 @@ resource "aws_api_gateway_gateway_response" "test" {
   response_templates = {
     "text/html; charset=utf-8" = "These aren't the droids you're looking for"
   }
-
-  # response_parameters = {
-  #   "gatewayresponse.header.Authorization" = "'Basic'"
-  # }
 }
 
 /*
-Deployment
+Stages and Deployment
 */
+resource "aws_api_gateway_stage" "stage_prod" {
+  rest_api_id   = aws_api_gateway_rest_api.vpn_api.id
+  stage_name    = "prod"
+  deployment_id = aws_api_gateway_deployment.vpn_api_deployment.id
+}
+
 resource "aws_api_gateway_deployment" "vpn_api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.vpn_api.id
 
@@ -240,24 +245,20 @@ resource "aws_api_gateway_deployment" "vpn_api_deployment" {
       aws_api_gateway_method.method_status.id,
       aws_api_gateway_method.method_stop.id,
       aws_api_gateway_method.method_start.id,
+      aws_api_gateway_request_validator.validator_status.id,
       aws_api_gateway_integration.aws_instance_status.id,
       aws_api_gateway_integration.aws_instance_stop.id,
       aws_api_gateway_integration.aws_instance_start.id,
       aws_api_gateway_integration_response.integration_response_200,
       aws_api_gateway_integration_response.integration_response_200_stop,
-      aws_api_gateway_integration_response.integration_response_200_start
+      aws_api_gateway_integration_response.integration_response_200_start,
+      aws_api_gateway_gateway_response.anti-spider-response.id
     ]))
   }
 
   lifecycle {
     create_before_destroy = true
   }
-}
-
-resource "aws_api_gateway_stage" "stage_prod" {
-  rest_api_id   = aws_api_gateway_rest_api.vpn_api.id
-  stage_name    = "prod"
-  deployment_id = aws_api_gateway_deployment.vpn_api_deployment.id
 }
 
 # resource "aws_lambda_function" "example" {
