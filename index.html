@@ -66,14 +66,16 @@
     </div>
 
     <script>
-        var url = "https://plhmkcoum8.execute-api.eu-west-1.amazonaws.com/prod/"
+        var api_base_url = "https://bqvi3yd737.execute-api.eu-west-1.amazonaws.com/prod/"
 
         function updateStatus(message) {
             document.getElementById("status").innerHTML = message;
         }
 
         function getInstanceState() {
-            fetch(url + "status")
+            url = new URL(api_base_url + 'status')
+            url.searchParams.append('anti-spider', true)
+            fetch(url)
                 .then(response => response.text())
                 .then(data => {
                     const parser = new DOMParser();
