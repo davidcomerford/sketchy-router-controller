@@ -1,3 +1,11 @@
+import json
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+def lambda_handler(event, context):
+    body = '''
 <!DOCTYPE html>
 <html>
 
@@ -103,3 +111,20 @@
 </body>
 
 </html>
+    '''
+    return {
+        "statusCode": 200,
+        "isBase64Encoded": False,
+        "headers": {
+            "Access-Control-Allow-Origin": "'*'",
+            "Access-Control-Allow-Methods": "GET",
+            "Content-Type": "text/html; charset=utf-8"
+        },
+        "body": body
+    }
+
+
+if __name__ == "__main__":
+    event = []
+    context = []
+    print(lambda_handler(event, context))
