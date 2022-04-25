@@ -269,10 +269,10 @@ resource "aws_api_gateway_deployment" "vpn_api_deployment" {
   }
 }
 
-# resource "aws_lambda_function" "example" {
-#   filename      = "example.zip"
-#   function_name = "Example"
-#   role          = aws_iam_role.example.arn
-#   handler       = "index.handler"
-#   runtime       = "nodejs12.x"
-# }
+resource "aws_lambda_function" "example" {
+  filename      = "webui.zip"
+  function_name = "sketchy_router_webui"
+  role          =  aws_iam_role.lambda.arn
+  handler       = "lambda_handler"
+  runtime       = "python3.8"
+}
