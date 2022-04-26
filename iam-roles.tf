@@ -2,7 +2,7 @@
 Lambda
 */
 resource "aws_iam_role" "sketchy_router_webui" {
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  assume_role_policy = data.aws_iam_policy_document.assume_role_lambda.json
   name               = "sketchy-router-webui"
 }
 
@@ -37,11 +37,11 @@ resource "aws_iam_role_policy_attachment" "attachment_assume_role_lambda" {
 Logging
 */
 resource "aws_iam_role" "sketchy_router_logging" {
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  assume_role_policy = data.aws_iam_policy_document.assume_role_logging.json
   name               = "sketchy-router-logging"
 }
 
-data "aws_iam_policy_document" "assume_role" {
+data "aws_iam_policy_document" "assume_role_logging" {
   statement {
     actions = ["sts:AssumeRole"]
     effect  = "Allow"

@@ -265,10 +265,10 @@ resource "aws_api_gateway_stage" "stage_prod" {
   rest_api_id   = aws_api_gateway_rest_api.vpn_api.id
   stage_name    = "prod"
   deployment_id = aws_api_gateway_deployment.vpn_api_deployment.id
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.sketchy_router_logs.arn
-    format          = "JSON"
-  }
+  # access_log_settings {
+  #   destination_arn = aws_cloudwatch_log_group.sketchy_router_logs.arn
+  #   format          = "JSON"
+  # }
 }
 
 resource "aws_api_gateway_deployment" "vpn_api_deployment" {
