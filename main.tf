@@ -327,27 +327,6 @@ resource "aws_api_gateway_deployment" "vpn_api_deployment" {
 }
 
 /*
-Lambda
-*/
-# resource "aws_lambda_function" "sketchy_router_function" {
-#   filename         = "webui.zip"
-#   source_code_hash = filebase64sha256("webui.zip")
-#   function_name    = "sketchy_router_webui"
-#   role             = aws_iam_role.sketchy_router_webui.arn
-#   handler          = "webui.lambda_handler"
-#   runtime          = "python3.9"
-# }
-
-# resource "aws_lambda_permission" "lambda_permission" {
-#   statement_id  = "AllowExecutionFromAPIGateway"
-#   action        = "lambda:InvokeFunction"
-#   function_name = aws_lambda_function.sketchy_router_function.function_name
-#   principal     = "apigateway.amazonaws.com"
-#   source_arn    = aws_api_gateway_rest_api.vpn_api.arn
-#   #source_arn    = "arn:aws:execute-api:${var.myregion}:${var.accountId}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.method.http_method}${aws_api_gateway_resource.resource.path}"
-# }
-
-/*
 Logging
 */
 resource "aws_cloudwatch_log_group" "sketchy_router_logs" {
