@@ -4,7 +4,7 @@ provider "aws" {
 }
 
 resource "aws_api_gateway_account" "gateway_account" {
-  cloudwatch_role_arn = aws_iam_role.sketchy_router_logging.arn
+  cloudwatch_role_arn = aws_iam_role.role_sketchy_router_logging.arn
 }
 
 resource "aws_api_gateway_rest_api" "vpn_api" {
@@ -96,6 +96,23 @@ resource "aws_api_gateway_request_validator" "validator_antispider" {
 /*
 Method Responses
 */
+resource "aws_api_gateway_method_response" "method_response_webui_200" {
+  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
+  resource_id = aws_api_gateway_rest_api.vpn_api.root_resource_id
+  http_method = aws_api_gateway_method.method_webui.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+  response_models = {
+    "text/html;charset=UTF-8" = "Empty"
+  }
+}
+
 resource "aws_api_gateway_method_response" "method_response_status_200" {
   rest_api_id = aws_api_gateway_rest_api.vpn_api.id
   resource_id = aws_api_gateway_resource.resource_status.id
@@ -108,10 +125,6 @@ resource "aws_api_gateway_method_response" "method_response_status_200" {
     "method.response.header.Access-Control-Allow-Origin"      = true,
     "method.response.header.Access-Control-Allow-Credentials" = true
   }
-
-  # response_models = {
-  #   "text/plain" = "Empty"
-  # }
 }
 
 resource "aws_api_gateway_method_response" "method_response_stop_200" {
@@ -146,12 +159,14 @@ resource "aws_api_gateway_method_response" "method_response_start_200" {
 Integrations
 */
 resource "aws_api_gateway_integration" "integration_webui" {
-  rest_api_id             = aws_api_gateway_rest_api.vpn_api.id
-  resource_id             = aws_api_gateway_rest_api.vpn_api.root_resource_id
-  http_method             = aws_api_gateway_method.method_webui.http_method
-  integration_http_method = "POST"
-  type                    = "AWS"
-  uri                     = aws_lambda_function.sketchy_router_function.invoke_arn
+  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
+  resource_id = aws_api_gateway_rest_api.vpn_api.root_resource_id
+  http_method = aws_api_gateway_method.method_webui.http_method
+  # integration_http_method = "POST"
+  type = "MOCK"
+  request_templates = {
+    "application/json" : "{\"statusCode\": 200}"
+  }
 }
 
 resource "aws_api_gateway_integration" "aws_instance_status" {
@@ -202,6 +217,18 @@ resource "aws_api_gateway_integration" "aws_instance_start" {
 /*
 Integration Responses
 */
+resource "aws_api_gateway_integration_response" "integration_response_webui_200" {
+  depends_on = [
+    aws_api_gateway_integration.integration_webui
+  ]
+  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
+  resource_id = aws_api_gateway_rest_api.vpn_api.root_resource_id
+  http_method = aws_api_gateway_method.method_webui.http_method
+  status_code = aws_api_gateway_method_response.method_response_status_200.status_code
+  response_templates = {
+  "text/html" = "hey there" }
+}
+
 resource "aws_api_gateway_integration_response" "integration_response_200" {
   rest_api_id = aws_api_gateway_rest_api.vpn_api.id
   resource_id = aws_api_gateway_resource.resource_status.id
@@ -261,14 +288,14 @@ resource "aws_api_gateway_gateway_response" "anti-spider-response" {
 Stages and Deployment
 */
 resource "aws_api_gateway_stage" "stage_prod" {
-  depends_on = [aws_cloudwatch_log_group.sketchy_router_logs]
+  depends_on    = [aws_cloudwatch_log_group.sketchy_router_logs]
   rest_api_id   = aws_api_gateway_rest_api.vpn_api.id
   stage_name    = "prod"
   deployment_id = aws_api_gateway_deployment.vpn_api_deployment.id
-  # access_log_settings {
-  #   destination_arn = aws_cloudwatch_log_group.sketchy_router_logs.arn
-  #   format          = "JSON"
-  # }
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.sketchy_router_logs.arn
+    format          = file("stage-log-format.json")
+  }
 }
 
 resource "aws_api_gateway_deployment" "vpn_api_deployment" {
@@ -286,6 +313,7 @@ resource "aws_api_gateway_deployment" "vpn_api_deployment" {
       aws_api_gateway_integration.aws_instance_status.id,
       aws_api_gateway_integration.aws_instance_stop.id,
       aws_api_gateway_integration.aws_instance_start.id,
+      aws_api_gateway_integration_response.integration_response_webui_200,
       aws_api_gateway_integration_response.integration_response_200,
       aws_api_gateway_integration_response.integration_response_200_stop,
       aws_api_gateway_integration_response.integration_response_200_start,
@@ -301,23 +329,23 @@ resource "aws_api_gateway_deployment" "vpn_api_deployment" {
 /*
 Lambda
 */
-resource "aws_lambda_function" "sketchy_router_function" {
-  filename         = "webui.zip"
-  source_code_hash = filebase64sha256("webui.zip")
-  function_name    = "sketchy_router_webui"
-  role             = aws_iam_role.sketchy_router_webui.arn
-  handler          = "webui.lambda_handler"
-  runtime          = "python3.9"
-}
+# resource "aws_lambda_function" "sketchy_router_function" {
+#   filename         = "webui.zip"
+#   source_code_hash = filebase64sha256("webui.zip")
+#   function_name    = "sketchy_router_webui"
+#   role             = aws_iam_role.sketchy_router_webui.arn
+#   handler          = "webui.lambda_handler"
+#   runtime          = "python3.9"
+# }
 
-resource "aws_lambda_permission" "lambda_permission" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.sketchy_router_function.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = aws_api_gateway_rest_api.vpn_api.arn
-  #source_arn    = "arn:aws:execute-api:${var.myregion}:${var.accountId}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.method.http_method}${aws_api_gateway_resource.resource.path}"
-}
+# resource "aws_lambda_permission" "lambda_permission" {
+#   statement_id  = "AllowExecutionFromAPIGateway"
+#   action        = "lambda:InvokeFunction"
+#   function_name = aws_lambda_function.sketchy_router_function.function_name
+#   principal     = "apigateway.amazonaws.com"
+#   source_arn    = aws_api_gateway_rest_api.vpn_api.arn
+#   #source_arn    = "arn:aws:execute-api:${var.myregion}:${var.accountId}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.method.http_method}${aws_api_gateway_resource.resource.path}"
+# }
 
 /*
 Logging
@@ -325,4 +353,11 @@ Logging
 resource "aws_cloudwatch_log_group" "sketchy_router_logs" {
   name              = "sketchy_router_api"
   retention_in_days = 1
+}
+
+/*
+Outputs
+*/
+output "api_url" {
+  value = aws_api_gateway_stage.stage_prod.invoke_url
 }
