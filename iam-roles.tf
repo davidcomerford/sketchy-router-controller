@@ -6,15 +6,10 @@ resource "aws_iam_role" "ec2_control" {
   assume_role_policy = file("iam-trust-policy-apigateway.json")
 }
 
-resource "aws_iam_role_policy_attachment" "attachment_assume_role_lambda" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
-  role = aws_iam_role.ec2_control.name
-}
-
-
-resource "aws_iam_role_policy_attachment" "attachment_ec2_control" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
-  role = aws_iam_role.ec2_control.name
+resource "aws_iam_policy_attachment" "attachment_ec2_control" {
+  name = "attachment_ec2_control_policy"
+  policy_arn = aws_iam_policy.policy_ec2.arn
+  roles = [aws_iam_role.ec2_control.name]
 }
 
 resource "aws_iam_policy" "policy_ec2" {
