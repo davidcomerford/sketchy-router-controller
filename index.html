@@ -3,13 +3,14 @@
 
 <body>
     <title>Sketchy Router Controller</title>
+    <link rel="icon" type="image/x-icon" href="https://www.cloudflare.com/favicon.ico">
     <style>
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: #eceffc;
+            background: #607466;
         }
 
         h1 {
@@ -23,19 +24,18 @@
             width: 30%;
             margin: 10px 0 9px 0;
             background-color: #2f3032;
-            border: 1px solid hsl(214, 79%, 65%);
-            color: hsl(214, 79%, 65%);
+            border: 1px solid #aedcc0;
+            color: #aedcc0;
             transition-duration: 0.4s;
         }
 
         .btn:hover {
-            background-color: hsl(214, 79%, 65%);
+            background-color: #6ab39c;
             color: white;
         }
 
         .status_field {
-            --input-default-border-color: white;
-            --input-border-bottom-color: transparent;
+            padding-top: 10px;
         }
 
         .login-form {
@@ -57,8 +57,8 @@
         <h1>Sketchy Router Controller</h1>
 
         <button class="btn" onclick="getInstanceState()">Get State</button>
-        <button class="btn btn-primary btn-ghost" onclick="changeInstanceState(\'start\')">Start</button>
-        <button class="btn btn-primary btn-ghost" onclick="changeInstanceState(\'stop\')">Stop</button>
+        <button class="btn btn-primary btn-ghost" onclick="changeInstanceState('start')">Start</button>
+        <button class="btn btn-primary btn-ghost" onclick="changeInstanceState('stop')">Stop</button>
 
         <div class="status_field">
             Instance state: <span id="status"> unknown </span>
@@ -66,7 +66,8 @@
     </div>
 
     <script>
-        var api_base_url = "https://bqvi3yd737.execute-api.eu-west-1.amazonaws.com/prod/"
+        var api_base_url = ['https://', window.location.host, '/prod/'].join(
+            ''); //"https://" + window.location.host + "/prod/"
 
         function updateStatus(message) {
             document.getElementById("status").innerHTML = message;
@@ -84,11 +85,17 @@
                         .childNodes[0].nodeValue
                     updateStatus(instance_state)
                 })
-                .catch(console.error)
+                .catch(error => {
+                    updateStatus('error')
+                    alert(error)
+                });
         }
 
         function changeInstanceState(new_state) {
-            fetch(url + new_state)
+            //fetch(url + new_state)
+            url = new URL(api_base_url + new_state)
+            url.searchParams.append("anti-spider", true)
+            fetch(url)
                 .then(response => response.text())
                 .then(data => {
                     const parser = new DOMParser();
@@ -97,7 +104,10 @@
                         .childNodes[0].nodeValue
                     updateStatus(instance_state)
                 })
-                .catch(console.error)
+                .catch(error => {
+                    updateStatus('error')
+                    alert(error)
+                });
         }
     </script>
 </body>
