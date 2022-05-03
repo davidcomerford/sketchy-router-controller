@@ -1,18 +1,29 @@
 /*
-Lambda
+Control of EC2
 */
-resource "aws_iam_role" "sketchy_router_webui" {
-  name               = "sketchy-router-webui"
-  assume_role_policy = file("iam-trust-policy-lambda.json")
+resource "aws_iam_role" "ec2_control" {
+  name               = "sketchy-router-ec2"
+  assume_role_policy = file("iam-trust-policy-apigateway.json")
 }
 
-# resource "aws_iam_role_policy_attachment" "attachment_assume_role_lambda" {
-#   #  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-#   role = aws_iam_role.sketchy_router_webui.name
-# }
+resource "aws_iam_role_policy_attachment" "attachment_assume_role_lambda" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+  role = aws_iam_role.ec2_control.name
+}
+
+
+resource "aws_iam_role_policy_attachment" "attachment_ec2_control" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+  role = aws_iam_role.ec2_control.name
+}
+
+resource "aws_iam_policy" "policy_ec2" {
+  name        = "ec2_control"
+  policy      = file("iam-policy-ec2.json")
+}
 
 /*
-Logging
+API Gateway Logging
 */
 resource "aws_iam_role" "role_sketchy_router_logging" {
   name               = "sketchy-router-logging"
@@ -27,6 +38,6 @@ resource "aws_iam_policy" "policy_api_logging" {
 
 resource "aws_iam_policy_attachment" "test-attach" {
   name       = "attachment-logging-role"
-  roles      = [aws_iam_role.role_sketchy_router_logging.name, aws_iam_role.sketchy_router_webui.name]
+  roles      = [aws_iam_role.role_sketchy_router_logging.name]
   policy_arn = aws_iam_policy.policy_api_logging.arn
 }
