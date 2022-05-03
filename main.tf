@@ -1,6 +1,6 @@
 provider "aws" {
-  region  = "eu-west-1"
-  profile = "dave"
+  region  = var.aws_region
+  profile = var.aws_profile
 }
 
 resource "aws_api_gateway_account" "gateway_account" {
@@ -173,12 +173,12 @@ resource "aws_api_gateway_integration" "aws_instance_status" {
   http_method             = aws_api_gateway_method.method_status.http_method
   type                    = "AWS"
   integration_http_method = "GET"
-  uri                     = "arn:aws:apigateway:${var.region}:ec2:action/DescribeInstances"
+  uri                     = "arn:aws:apigateway:${var.aws_region}:ec2:action/DescribeInstances"
   credentials             = aws_iam_role.ec2_control.arn
 
   request_parameters = {
     "integration.request.querystring.Version"      = "'2016-11-15'"
-    "integration.request.querystring.InstanceId.1" = "'i-09050415bdac45809'"
+    "integration.request.querystring.InstanceId.1" = "'${var.ec2_instance_id}'"
   }
 }
 
@@ -191,12 +191,12 @@ resource "aws_api_gateway_integration" "aws_instance_stop" {
   http_method             = aws_api_gateway_method.method_stop.http_method
   type                    = "AWS"
   integration_http_method = "GET"
-  uri                     = "arn:aws:apigateway:${var.region}:ec2:action/StopInstances"
+  uri                     = "arn:aws:apigateway:${var.aws_region}:ec2:action/StopInstances"
   credentials             = aws_iam_role.ec2_control.arn
 
   request_parameters = {
     "integration.request.querystring.Version"      = "'2016-11-15'"
-    "integration.request.querystring.InstanceId.1" = "'i-09050415bdac45809'"
+    "integration.request.querystring.InstanceId.1" = "'${var.ec2_instance_id}'"
   }
 }
 
@@ -209,12 +209,12 @@ resource "aws_api_gateway_integration" "aws_instance_start" {
   http_method             = aws_api_gateway_method.method_start.http_method
   type                    = "AWS"
   integration_http_method = "GET"
-  uri                     = "arn:aws:apigateway:${var.region}:ec2:action/StartInstances"
+  uri                     = "arn:aws:apigateway:${var.aws_region}:ec2:action/StartInstances"
   credentials             = aws_iam_role.ec2_control.arn
 
   request_parameters = {
     "integration.request.querystring.Version"      = "'2016-11-15'"
-    "integration.request.querystring.InstanceId.1" = "'i-09050415bdac45809'"
+    "integration.request.querystring.InstanceId.1" = "'${var.ec2_instance_id}'"
   }
 }
 
