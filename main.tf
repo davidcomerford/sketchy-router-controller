@@ -45,10 +45,6 @@ resource "aws_api_gateway_method" "method_webui" {
   resource_id   = aws_api_gateway_rest_api.vpn_api.root_resource_id
   http_method   = "GET"
   authorization = "NONE"
-  # request_validator_id = aws_api_gateway_request_validator.validator_antispider.id
-  # request_parameters = {
-  #   "method.request.querystring.anti-spider" = true
-  # }
 }
 
 resource "aws_api_gateway_method" "method_status" {
@@ -162,7 +158,6 @@ resource "aws_api_gateway_integration" "integration_webui" {
   rest_api_id = aws_api_gateway_rest_api.vpn_api.id
   resource_id = aws_api_gateway_rest_api.vpn_api.root_resource_id
   http_method = aws_api_gateway_method.method_webui.http_method
-  # integration_http_method = "POST"
   type = "MOCK"
   request_templates = {
     "application/json" : "{\"statusCode\": 200}"
@@ -175,8 +170,8 @@ resource "aws_api_gateway_integration" "aws_instance_status" {
   http_method             = aws_api_gateway_method.method_status.http_method
   type                    = "AWS"
   integration_http_method = "GET"
-  uri                     = "arn:aws:apigateway:eu-west-1:ec2:action/DescribeInstances"
-  credentials             = "arn:aws:iam::237725146655:role/control-secret-router"
+  uri                     = "arn:aws:apigateway:${var.region}:ec2:action/DescribeInstances"
+  credentials             = aws_iam_role.ec2_control.arn
 
   request_parameters = {
     "integration.request.querystring.Version"      = "'2016-11-15'"
@@ -190,8 +185,8 @@ resource "aws_api_gateway_integration" "aws_instance_stop" {
   http_method             = aws_api_gateway_method.method_stop.http_method
   type                    = "AWS"
   integration_http_method = "GET"
-  uri                     = "arn:aws:apigateway:eu-west-1:ec2:action/StopInstances"
-  credentials             = "arn:aws:iam::237725146655:role/control-secret-router"
+  uri                     = "arn:aws:apigateway:${var.region}:ec2:action/StopInstances"
+  credentials             = aws_iam_role.ec2_control.arn
 
   request_parameters = {
     "integration.request.querystring.Version"      = "'2016-11-15'"
@@ -205,8 +200,8 @@ resource "aws_api_gateway_integration" "aws_instance_start" {
   http_method             = aws_api_gateway_method.method_start.http_method
   type                    = "AWS"
   integration_http_method = "GET"
-  uri                     = "arn:aws:apigateway:eu-west-1:ec2:action/StartInstances"
-  credentials             = "arn:aws:iam::237725146655:role/control-secret-router"
+  uri                     = "arn:aws:apigateway:${var.region}:ec2:action/StartInstances"
+  credentials             = aws_iam_role.ec2_control.arn
 
   request_parameters = {
     "integration.request.querystring.Version"      = "'2016-11-15'"
@@ -226,7 +221,7 @@ resource "aws_api_gateway_integration_response" "integration_response_webui_200"
   http_method = aws_api_gateway_method.method_webui.http_method
   status_code = aws_api_gateway_method_response.method_response_status_200.status_code
   response_templates = {
-  "text/html" = "hey there" }
+  "text/html" = file("index.html") }
 }
 
 resource "aws_api_gateway_integration_response" "integration_response_200" {
