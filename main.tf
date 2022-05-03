@@ -165,6 +165,9 @@ resource "aws_api_gateway_integration" "integration_webui" {
 }
 
 resource "aws_api_gateway_integration" "aws_instance_status" {
+  depends_on = [
+    aws_iam_role.ec2_control
+  ]
   rest_api_id             = aws_api_gateway_rest_api.vpn_api.id
   resource_id             = aws_api_gateway_resource.resource_status.id
   http_method             = aws_api_gateway_method.method_status.http_method
@@ -180,6 +183,9 @@ resource "aws_api_gateway_integration" "aws_instance_status" {
 }
 
 resource "aws_api_gateway_integration" "aws_instance_stop" {
+  depends_on = [
+    aws_iam_role.ec2_control
+  ]
   rest_api_id             = aws_api_gateway_rest_api.vpn_api.id
   resource_id             = aws_api_gateway_resource.resource_stop.id
   http_method             = aws_api_gateway_method.method_stop.http_method
@@ -195,6 +201,9 @@ resource "aws_api_gateway_integration" "aws_instance_stop" {
 }
 
 resource "aws_api_gateway_integration" "aws_instance_start" {
+  depends_on = [
+    aws_iam_role.ec2_control
+  ]
   rest_api_id             = aws_api_gateway_rest_api.vpn_api.id
   resource_id             = aws_api_gateway_resource.resource_start.id
   http_method             = aws_api_gateway_method.method_start.http_method
