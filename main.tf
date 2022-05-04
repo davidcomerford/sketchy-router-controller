@@ -3,37 +3,46 @@ provider "aws" {
   profile = var.aws_profile
 }
 
-resource "aws_api_gateway_account" "gateway_account" {
-  cloudwatch_role_arn = aws_iam_role.role_sketchy_router_logging.arn
-}
-
-resource "aws_api_gateway_rest_api" "vpn_api" {
-  name        = "vpn-api"
-  description = "This API controls my VPN EC2 instance I lovingly call Sketchy Router"
+resource "aws_api_gateway_rest_api" "sketchy_api" {
+  name        = "sketch-router"
+  description = "Web UI for EC2 instance"
 
   endpoint_configuration {
     types = ["REGIONAL"]
   }
 }
 
+resource "aws_api_gateway_account" "gateway_account" {
+  cloudwatch_role_arn = aws_iam_role.logging_role.arn
+}
+
 /*
 Resources
 */
 resource "aws_api_gateway_resource" "resource_status" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
-  parent_id   = aws_api_gateway_rest_api.vpn_api.root_resource_id
+  depends_on = [
+    aws_api_gateway_rest_api.sketchy_api
+  ]
+  rest_api_id = aws_api_gateway_rest_api.sketchy_api.id
+  parent_id   = aws_api_gateway_rest_api.sketchy_api.root_resource_id
   path_part   = "status"
 }
 
 resource "aws_api_gateway_resource" "resource_start" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
-  parent_id   = aws_api_gateway_rest_api.vpn_api.root_resource_id
+  depends_on = [
+    aws_api_gateway_rest_api.sketchy_api
+  ]
+  rest_api_id = aws_api_gateway_rest_api.sketchy_api.id
+  parent_id   = aws_api_gateway_rest_api.sketchy_api.root_resource_id
   path_part   = "start"
 }
 
 resource "aws_api_gateway_resource" "resource_stop" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
-  parent_id   = aws_api_gateway_rest_api.vpn_api.root_resource_id
+  depends_on = [
+    aws_api_gateway_rest_api.sketchy_api
+  ]
+  rest_api_id = aws_api_gateway_rest_api.sketchy_api.id
+  parent_id   = aws_api_gateway_rest_api.sketchy_api.root_resource_id
   path_part   = "stop"
 }
 
@@ -41,14 +50,14 @@ resource "aws_api_gateway_resource" "resource_stop" {
 Methods
 */
 resource "aws_api_gateway_method" "method_webui" {
-  rest_api_id   = aws_api_gateway_rest_api.vpn_api.id
-  resource_id   = aws_api_gateway_rest_api.vpn_api.root_resource_id
+  rest_api_id   = aws_api_gateway_rest_api.sketchy_api.id
+  resource_id   = aws_api_gateway_rest_api.sketchy_api.root_resource_id
   http_method   = "GET"
   authorization = "NONE"
 }
 
 resource "aws_api_gateway_method" "method_status" {
-  rest_api_id          = aws_api_gateway_rest_api.vpn_api.id
+  rest_api_id          = aws_api_gateway_rest_api.sketchy_api.id
   resource_id          = aws_api_gateway_resource.resource_status.id
   http_method          = "GET"
   authorization        = "NONE"
@@ -59,7 +68,7 @@ resource "aws_api_gateway_method" "method_status" {
 }
 
 resource "aws_api_gateway_method" "method_start" {
-  rest_api_id          = aws_api_gateway_rest_api.vpn_api.id
+  rest_api_id          = aws_api_gateway_rest_api.sketchy_api.id
   resource_id          = aws_api_gateway_resource.resource_start.id
   http_method          = "GET"
   authorization        = "NONE"
@@ -70,7 +79,7 @@ resource "aws_api_gateway_method" "method_start" {
 }
 
 resource "aws_api_gateway_method" "method_stop" {
-  rest_api_id          = aws_api_gateway_rest_api.vpn_api.id
+  rest_api_id          = aws_api_gateway_rest_api.sketchy_api.id
   resource_id          = aws_api_gateway_resource.resource_stop.id
   http_method          = "GET"
   authorization        = "NONE"
@@ -85,7 +94,7 @@ Request Validator
 */
 resource "aws_api_gateway_request_validator" "validator_antispider" {
   name                        = "check-for-anti-spider-header"
-  rest_api_id                 = aws_api_gateway_rest_api.vpn_api.id
+  rest_api_id                 = aws_api_gateway_rest_api.sketchy_api.id
   validate_request_parameters = true
 }
 
@@ -93,8 +102,8 @@ resource "aws_api_gateway_request_validator" "validator_antispider" {
 Method Responses
 */
 resource "aws_api_gateway_method_response" "method_response_webui_200" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
-  resource_id = aws_api_gateway_rest_api.vpn_api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.sketchy_api.id
+  resource_id = aws_api_gateway_rest_api.sketchy_api.root_resource_id
   http_method = aws_api_gateway_method.method_webui.http_method
   status_code = "200"
 
@@ -110,7 +119,7 @@ resource "aws_api_gateway_method_response" "method_response_webui_200" {
 }
 
 resource "aws_api_gateway_method_response" "method_response_status_200" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
+  rest_api_id = aws_api_gateway_rest_api.sketchy_api.id
   resource_id = aws_api_gateway_resource.resource_status.id
   http_method = aws_api_gateway_method.method_status.http_method
   status_code = "200"
@@ -124,7 +133,7 @@ resource "aws_api_gateway_method_response" "method_response_status_200" {
 }
 
 resource "aws_api_gateway_method_response" "method_response_stop_200" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
+  rest_api_id = aws_api_gateway_rest_api.sketchy_api.id
   resource_id = aws_api_gateway_resource.resource_stop.id
   http_method = aws_api_gateway_method.method_stop.http_method
   status_code = "200"
@@ -138,7 +147,7 @@ resource "aws_api_gateway_method_response" "method_response_stop_200" {
 }
 
 resource "aws_api_gateway_method_response" "method_response_start_200" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
+  rest_api_id = aws_api_gateway_rest_api.sketchy_api.id
   resource_id = aws_api_gateway_resource.resource_start.id
   http_method = aws_api_gateway_method.method_start.http_method
   status_code = "200"
@@ -155,8 +164,8 @@ resource "aws_api_gateway_method_response" "method_response_start_200" {
 Integrations
 */
 resource "aws_api_gateway_integration" "integration_webui" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
-  resource_id = aws_api_gateway_rest_api.vpn_api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.sketchy_api.id
+  resource_id = aws_api_gateway_rest_api.sketchy_api.root_resource_id
   http_method = aws_api_gateway_method.method_webui.http_method
   type = "MOCK"
   request_templates = {
@@ -166,15 +175,15 @@ resource "aws_api_gateway_integration" "integration_webui" {
 
 resource "aws_api_gateway_integration" "aws_instance_status" {
   depends_on = [
-    aws_iam_role.ec2_control
+    aws_iam_role.ec2_control_role
   ]
-  rest_api_id             = aws_api_gateway_rest_api.vpn_api.id
+  rest_api_id             = aws_api_gateway_rest_api.sketchy_api.id
   resource_id             = aws_api_gateway_resource.resource_status.id
   http_method             = aws_api_gateway_method.method_status.http_method
   type                    = "AWS"
   integration_http_method = "GET"
   uri                     = "arn:aws:apigateway:${var.aws_region}:ec2:action/DescribeInstances"
-  credentials             = aws_iam_role.ec2_control.arn
+  credentials             = aws_iam_role.ec2_control_role.arn
 
   request_parameters = {
     "integration.request.querystring.Version"      = "'2016-11-15'"
@@ -184,15 +193,15 @@ resource "aws_api_gateway_integration" "aws_instance_status" {
 
 resource "aws_api_gateway_integration" "aws_instance_stop" {
   depends_on = [
-    aws_iam_role.ec2_control
+    aws_iam_role.ec2_control_role
   ]
-  rest_api_id             = aws_api_gateway_rest_api.vpn_api.id
+  rest_api_id             = aws_api_gateway_rest_api.sketchy_api.id
   resource_id             = aws_api_gateway_resource.resource_stop.id
   http_method             = aws_api_gateway_method.method_stop.http_method
   type                    = "AWS"
   integration_http_method = "GET"
   uri                     = "arn:aws:apigateway:${var.aws_region}:ec2:action/StopInstances"
-  credentials             = aws_iam_role.ec2_control.arn
+  credentials             = aws_iam_role.ec2_control_role.arn
 
   request_parameters = {
     "integration.request.querystring.Version"      = "'2016-11-15'"
@@ -202,15 +211,15 @@ resource "aws_api_gateway_integration" "aws_instance_stop" {
 
 resource "aws_api_gateway_integration" "aws_instance_start" {
   depends_on = [
-    aws_iam_role.ec2_control
+    aws_iam_role.ec2_control_role
   ]
-  rest_api_id             = aws_api_gateway_rest_api.vpn_api.id
+  rest_api_id             = aws_api_gateway_rest_api.sketchy_api.id
   resource_id             = aws_api_gateway_resource.resource_start.id
   http_method             = aws_api_gateway_method.method_start.http_method
   type                    = "AWS"
   integration_http_method = "GET"
   uri                     = "arn:aws:apigateway:${var.aws_region}:ec2:action/StartInstances"
-  credentials             = aws_iam_role.ec2_control.arn
+  credentials             = aws_iam_role.ec2_control_role.arn
 
   request_parameters = {
     "integration.request.querystring.Version"      = "'2016-11-15'"
@@ -225,16 +234,19 @@ resource "aws_api_gateway_integration_response" "integration_response_webui_200"
   depends_on = [
     aws_api_gateway_integration.integration_webui
   ]
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
-  resource_id = aws_api_gateway_rest_api.vpn_api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.sketchy_api.id
+  resource_id = aws_api_gateway_rest_api.sketchy_api.root_resource_id
   http_method = aws_api_gateway_method.method_webui.http_method
   status_code = aws_api_gateway_method_response.method_response_status_200.status_code
   response_templates = {
   "text/html" = file("index.html") }
 }
 
-resource "aws_api_gateway_integration_response" "integration_response_200" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
+resource "aws_api_gateway_integration_response" "integration_response_status_200" {
+  depends_on = [
+    aws_api_gateway_integration.aws_instance_status
+  ]
+  rest_api_id = aws_api_gateway_rest_api.sketchy_api.id
   resource_id = aws_api_gateway_resource.resource_status.id
   http_method = aws_api_gateway_method.method_status.http_method
   status_code = aws_api_gateway_method_response.method_response_status_200.status_code
@@ -247,8 +259,11 @@ resource "aws_api_gateway_integration_response" "integration_response_200" {
   }
 }
 
-resource "aws_api_gateway_integration_response" "integration_response_200_stop" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
+resource "aws_api_gateway_integration_response" "integration_response_stop_200" {
+  depends_on = [
+    aws_api_gateway_integration.aws_instance_stop
+  ]
+  rest_api_id = aws_api_gateway_rest_api.sketchy_api.id
   resource_id = aws_api_gateway_resource.resource_stop.id
   http_method = aws_api_gateway_method.method_stop.http_method
   status_code = aws_api_gateway_method_response.method_response_stop_200.status_code
@@ -261,8 +276,11 @@ resource "aws_api_gateway_integration_response" "integration_response_200_stop" 
   }
 }
 
-resource "aws_api_gateway_integration_response" "integration_response_200_start" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
+resource "aws_api_gateway_integration_response" "integration_response_start_200" {
+  depends_on = [
+    aws_api_gateway_integration.aws_instance_start
+  ]
+  rest_api_id = aws_api_gateway_rest_api.sketchy_api.id
   resource_id = aws_api_gateway_resource.resource_start.id
   http_method = aws_api_gateway_method.method_start.http_method
   status_code = aws_api_gateway_method_response.method_response_start_200.status_code
@@ -279,7 +297,7 @@ resource "aws_api_gateway_integration_response" "integration_response_200_start"
 Gateway Reponses
 */
 resource "aws_api_gateway_gateway_response" "anti-spider-response" {
-  rest_api_id   = aws_api_gateway_rest_api.vpn_api.id
+  rest_api_id   = aws_api_gateway_rest_api.sketchy_api.id
   status_code   = "400"
   response_type = "BAD_REQUEST_PARAMETERS"
 
@@ -293,7 +311,7 @@ Stages and Deployment
 */
 resource "aws_api_gateway_stage" "stage_prod" {
   depends_on    = [aws_cloudwatch_log_group.sketchy_router_logs]
-  rest_api_id   = aws_api_gateway_rest_api.vpn_api.id
+  rest_api_id   = aws_api_gateway_rest_api.sketchy_api.id
   stage_name    = "prod"
   deployment_id = aws_api_gateway_deployment.vpn_api_deployment.id
   access_log_settings {
@@ -303,7 +321,7 @@ resource "aws_api_gateway_stage" "stage_prod" {
 }
 
 resource "aws_api_gateway_deployment" "vpn_api_deployment" {
-  rest_api_id = aws_api_gateway_rest_api.vpn_api.id
+  rest_api_id = aws_api_gateway_rest_api.sketchy_api.id
 
   triggers = {
     redeployment = sha1(jsonencode([
@@ -318,9 +336,9 @@ resource "aws_api_gateway_deployment" "vpn_api_deployment" {
       aws_api_gateway_integration.aws_instance_stop.id,
       aws_api_gateway_integration.aws_instance_start.id,
       aws_api_gateway_integration_response.integration_response_webui_200,
-      aws_api_gateway_integration_response.integration_response_200,
-      aws_api_gateway_integration_response.integration_response_200_stop,
-      aws_api_gateway_integration_response.integration_response_200_start,
+      aws_api_gateway_integration_response.integration_response_status_200,
+      aws_api_gateway_integration_response.integration_response_stop_200,
+      aws_api_gateway_integration_response.integration_response_start_200,
       aws_api_gateway_gateway_response.anti-spider-response.id
     ]))
   }
