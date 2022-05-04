@@ -21,3 +21,7 @@ Mainly though, it's just to learn the API Gateway product and create a complete 
 ## Screenshot
 
 ![alt text](screenshot.png "Screenshot")
+
+## Badges
+
+[![tfsec](https://github.com/davidcomerford/sketchy-router-controller/actions/workflows/tfsec.yml/badge.svg)](https://github.com/davidcomerford/sketchy-router-controller/actions/workflows/tfsec.yml)
