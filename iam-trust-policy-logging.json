@@ -3,7 +3,7 @@
     "Statement": [{
         "Action": "sts:AssumeRole",
         "Principal": {
-            "Service": ["apigateway.amazonaws.com", "lambda.amazonaws.com"]
+            "Service": ["apigateway.amazonaws.com"]
         },
         "Effect": "Allow",
         "Sid": ""
