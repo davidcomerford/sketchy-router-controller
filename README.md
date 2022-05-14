@@ -13,7 +13,7 @@ The solution in implemented via Terraform on AWS.
 
 ## Usage
 
-Update variables.tf with you're AWS region, profile name and EC2 instance ID
+Update variables.tf with your AWS region, profile name and EC2 instance ID
 
 ````bash
 terraform init
