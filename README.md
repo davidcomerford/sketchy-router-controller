@@ -11,6 +11,15 @@ The solution in implemented via Terraform on AWS.
 - Crude *anti-spider* feature to prevent drive by crawling of API URL
 - Free to run under AWS free tier
 
+## Usage
+
+Update variables.tf with you're AWS region, profile name and EC2 instance ID
+
+````bash
+terraform init
+terraform apply
+````
+
 ## Why!?
 
 I use an EC2 instance to route traffic over a WireGuard VPN for accessing region-locked content. Certainly not illegal but potentially ethecially sketchy. Hense the name.
